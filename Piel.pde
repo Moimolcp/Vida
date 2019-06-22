@@ -10,6 +10,9 @@ public class Piel {
     PImage img;
     boolean c = false;
     boolean ready = false;
+    float blue;
+    float red;
+    float green;
     
     /*
     float dA = 1.05f;
@@ -29,7 +32,10 @@ public class Piel {
     int w = 100;
     int h = 100;    
     
-    void setup(Vida sk) {
+    void setup(Vida sk,PVector col,int dots) {
+        red = col.x;
+        green = col.y;
+        blue = col.z;
         space = new float[w][h][2];
         newSpace = new float[w][h][2];
 
@@ -44,7 +50,7 @@ public class Piel {
             }
         }
         
-        for (int n = 0; n < 20; n++) {
+        for (int n = 0; n < dots; n++) {
             int startx = (int) (Math.random()* (w) -1);
             int starty = (int) (Math.random() * (h) -1);
 
@@ -60,7 +66,7 @@ public class Piel {
             }
         }
         update();
-        toImg(sk);
+        toImg();
     }
 
     void update() {
@@ -126,7 +132,7 @@ public class Piel {
         sk.popStyle();
     }
     
-    PImage toImg(Vida sk){
+    PImage toImg(){
         img = new PImage(w, h);
         for (int i = 0; i < w; i++) {
             for (int j = 0; j < h; j++) {
@@ -135,7 +141,7 @@ public class Piel {
                 if(this.c){
                   img.pixels[i + j * w] = color((a - b) * 255,0,0);
                 }else{
-                  img.pixels[i + j * w] = color(0,0,(a - b) * 255);
+                  img.pixels[i + j * w] = color(((a - b) * 255)*red,((a - b) * 255)*green,((a - b) * 255)*blue);
                 }
                 
             }

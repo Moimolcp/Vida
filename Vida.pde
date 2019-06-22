@@ -52,7 +52,6 @@ void draw() {
   //println((mouseX-zoomx)/zoom + " " + (mouseY-zoomy)/zoom + " "+ seguir);
   //if (objetivo != null)println(objetivo.x + " " + objetivo.y + " "+ seguir + " , "+  (mouseX-zoomx)/zoom + " " + (mouseY-zoomy)/zoom + " "+ seguir); 
   //println((mouseX-zoomx)/zoom + " " + (mouseY-zoomy)/zoom);
-  
   translate(zoomx, zoomy);
   scale(zoom);
     
@@ -68,13 +67,12 @@ void draw() {
   rect(-10,-10,20,20);
   fill(0);
   
-  printDebug();
   
   if(!loaded){
   }else{
     runAgents();
   }
-  
+  printDebug();
   
   
 }
@@ -82,17 +80,34 @@ void draw() {
 void printDebug(){
   if(seguirP){
     strokeWeight(2);
-    line(objetivoP.pos.x,objetivoP.pos.y,objetivoP.pos.x + objetivoP.dir.x*50,objetivoP.pos.y + objetivoP.dir.y*50);
+    line(objetivoP.pos.x,objetivoP.pos.y,objetivoP.pos.x + objetivoP.vel.x*50,objetivoP.pos.y + objetivoP.vel.y*50);
+    stroke(0);
     fill(0,0,0,0);
     circle(objetivoP.pos.x,objetivoP.pos.y,objetivoP.vision*2);
-    strokeWeight(0);    
+    circle(objetivoP.pos.x,objetivoP.pos.y,objetivoP.sep*2);
+    strokeWeight(0);
+    
+    
+    scale(1/zoom);
+    translate(-zoomx, -zoomy);
+    println(objetivoP.vel.mag());  
+    fill(0);
+    text("Vel :" + objetivoP.vel.mag(),20,40);
+    text("Max Vel :" + objetivoP.vel.mag(),20,40);
+    text("Acc :" + objetivoP.dots,20,50);
+    text("Tamaño :" + objetivoP.dots,20,50);
+    text("Tamaño :" + objetivoP.dots,20,50);
+    text("Tamaño :" + objetivoP.dots,20,50);
   }if(seguirD){
     strokeWeight(2);
-    line(objetivoD.pos.x,objetivoD.pos.y,objetivoD.pos.x + objetivoD.dir.x*100,objetivoD.pos.y + objetivoD.dir.y*100);
+    line(objetivoD.pos.x,objetivoD.pos.y,objetivoD.pos.x + objetivoD.vel.x*50,objetivoD.pos.y + objetivoD.vel.y*50);
     fill(0,0,0,0);
     circle(objetivoD.pos.x,objetivoD.pos.y,objetivoD.vision*2);
-    strokeWeight(0);    
+    strokeWeight(0);
+    println(objetivoD.vel.mag());
   }
+  
+  
 }
 
 void runAgents(){
@@ -126,7 +141,7 @@ void runAgents(){
   
   
   if(mousePressed && mouseButton == LEFT){
-    ArrayList l = quatP.query(new Circle((mouseX-zoomx)/zoom,(mouseY-zoomy)/zoom,35));
+    ArrayList l = quatP.query(new Circle((mouseX-zoomx)/zoom,(mouseY-zoomy)/zoom,10));
     if(l.size() != 0){
       objetivoP = (Presa)((Point)l.get(0)).obj;
       seguirP = true;

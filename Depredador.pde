@@ -13,21 +13,29 @@ public class Depredador {
     float vision;
     float energia;
     float energiaRepro;
-    float velocidad;    
-    float aceleracion;
     int esperanzaVida;
     
     PVector pos;
     PVector dir;
-        
+    PVector vel;
+    PVector acc;
+    
+    float maxvel;
+    float maxacc;
+    float sep;
+    float Fsep;
+    
+    PVector col;
+    
     Vida sk;
     
     Presa objetivo;    
     
-    public Depredador(Vida sk) {        
+    public Depredador(Vida sk) {  
+        this.col = new PVector((float)Math.random(),(float)Math.random(),(float)Math.random());
         this.p = new Piel();
         this.p.c = true;
-        this.p.setup(sk);        
+        this.p.setup(sk,col,20);        
         this.sk = sk;
         this.edad = 0;
         this.tamInicial = 80;
@@ -36,8 +44,8 @@ public class Depredador {
         this.vision = 400;
         this.energia = 1000;
         this.energiaRepro = 300;
-        this.velocidad = 4;
-        this.aceleracion = 2;
+        this.maxvel = 4;
+        this.maxacc = 0.1;
         this.esperanzaVida = 50;
         
         this.pos = new PVector((float)Math.random()*sk.width*2*5 - sk.width*5
@@ -46,6 +54,10 @@ public class Depredador {
         this.dir = new PVector((float)Math.random()*2 - 1,(float)Math.random()*2 - 1);
         this.dir.normalize();
         
+        acc = new PVector(0, 0);
+        vel = new PVector(dir.x,dir.y);
+        sep = 100;
+        Fsep = 1.0;
     }
     
     void checkP(QuadTree qt){
@@ -62,7 +74,18 @@ public class Depredador {
             dir = PVector.sub(p.pos,pos);
             dir.normalize();
           }          
-      }      
+      }
+      
+      if (objetivo != null && objetivo.muerto == false){
+         PVector f = PVector.sub(objetivo.pos, pos);
+         f.normalize();
+         f.mult(maxvel);
+         f.sub(vel);
+         f.limit(maxacc);
+         f.mult(3);
+         acc.add(f);
+      }
+      
       l = new ArrayList();
       cir = new Circle(pos.x,pos.y, tam);      
       qt.query(cir, l);      
@@ -74,17 +97,36 @@ public class Depredador {
     
     void check(QuadTree qt){
       ArrayList<Point> l = new ArrayList();
-      Circle cir = new Circle(pos.x,pos.y, tam*1.414236562);
+      Circle cir = new Circle(pos.x,pos.y, vision);
       qt.query(cir, l);
+      
+      PVector Vsep = new PVector(0, 0);
+      int sepCount = 0;
+      
       for (Point pr : l){
-          Depredador de = (Depredador)pr.obj;
-          if (de != this){            
-            dir = PVector.sub(pos,de.pos);
-            dir.normalize();            
-            break;
+          Depredador p = (Depredador)pr.obj;
+          if (p != this){
+            float distancia = PVector.dist(pos,p.pos);
+            if(distancia < sep){
+              PVector diff = PVector.sub(pos ,p.pos );   
+              diff.normalize();
+              diff.div(distancia);
+              Vsep.add(diff);              
+              sepCount++;
+            }     
           } 
-      }   
-     
+      }
+      
+      if(sepCount > 0){
+        Vsep.div((float)sepCount);
+        Vsep.normalize();
+        Vsep.mult(maxvel);
+        Vsep.sub(vel);
+        Vsep.limit(maxacc);
+        Vsep.mult(Fsep);
+        acc.add(Vsep);
+      }
+           
     }
     
     void draw(Vida sk){
@@ -121,10 +163,20 @@ public class Depredador {
     
     void move(){
       if( !limit.contains(new Point(this) )){
-        dir = new PVector((float)Math.random()*2 - 1,(float)Math.random()*2 - 1); 
-        dir.normalize();       
+        PVector f = new PVector(-pos.x, -pos.y);
+        f.normalize();
+        f.mult(maxvel);
+        f.sub(vel);
+        f.limit(maxacc);
+        f.mult(2);
+        acc.add(f);       
       }
-      pos.add(PVector.mult(dir,velocidad));
+      vel.add(acc);
+      // Limit speed
+      vel.limit(maxvel);
+      pos.add(vel);      
+      acc.mult(0);
+      //pos.add(PVector.mult(dir,velocidad));
     }
     
 }

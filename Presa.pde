@@ -21,7 +21,8 @@ public class Presa {
     float Fali;
     float Fcoh;
     
-    
+    PVector col;
+    int dots;
     
     int esperanzaVida;
     Vida sk;
@@ -34,9 +35,13 @@ public class Presa {
     PVector acc;
     
     
-    public Presa(Vida sk) {        
+    
+    
+    public Presa(Vida sk) {
+        this.dots = (int) (Math.random()* 45 + 5);
+        this.col = new PVector((float)Math.random(),(float)Math.random(),(float)Math.random());
         this.p = new Piel();
-        p.setup(sk);
+        p.setup(sk,col,dots);
         p.c = false;
         this.sk = sk;
         this.edad = 0;
@@ -46,7 +51,7 @@ public class Presa {
         this.vision = (float)Math.random()*200+80;
         this.energia = 1000;
         this.energiaRepro = 300;
-        this.maxvel = (float)Math.random()*5+1;
+        
         this.esperanzaVida = 50;
         this.muerto = false;
         
@@ -57,24 +62,24 @@ public class Presa {
         this.dir.normalize();
         
         acc = new PVector(0, 0);
-        Fsep = 1.5;
+        Fsep = 1.8;
         Fali = 1.0;
         Fcoh = 1.0;
-        sep = 45;
+        sep = 50;
         maxacc = 0.03;
-        
-        
+        this.maxvel = (float)Math.random()*5+1;
+        //this.maxvel = 3;
         vel = new PVector(dir.x,dir.y);
         
     }
     void check(QuadTree qt){
       ArrayList<Point> l = new ArrayList();
-      Circle cir = new Circle(pos.x,pos.y, tam*1.414236562);      
+      Circle cir = new Circle(pos.x,pos.y, vision);      
       qt.query(cir, l);
       
-      PVector Vsep = new PVector(0, 0, 0);
-      PVector Vali = new PVector(0, 0, 0);
-      PVector Vcoh = new PVector(0, 0, 0);
+      PVector Vsep = new PVector(0, 0);
+      PVector Vali = new PVector(0, 0);
+      PVector Vcoh = new PVector(0, 0);
       
       int sepCount = 0;
       int aliCount = 0;
@@ -88,10 +93,10 @@ public class Presa {
             
             // Separacion            
             if(distancia < sep){
-              PVector diff = PVector.sub(pos, p.pos);   
+              PVector diff = PVector.sub(pos ,p.pos );   
               diff.normalize();
               diff.div(distancia);
-              Vsep.add(diff);
+              Vsep.add(diff);              
               sepCount++;
             }           
             
@@ -106,7 +111,7 @@ public class Presa {
             
             dir = new PVector((float)Math.random()*2 - 1,(float)Math.random()*2 - 1); 
             dir.normalize();
-            break;
+            //break;
           }          
       }
       
@@ -131,13 +136,17 @@ public class Presa {
         Vcoh.sub(pos); 
         Vcoh.normalize();
         Vcoh.mult(maxvel);       
-        Vali.sub(vel);
-        Vali.limit(maxacc);        
+        Vcoh.sub(vel);
+        Vcoh.limit(maxacc);        
       }
       
       Vsep.mult(Fsep);
       Vali.mult(Fali);
       Vcoh.mult(Fcoh);
+      
+      acc.add(Vsep);
+      acc.add(Vali);
+      acc.add(Vcoh);
       
     }
     
@@ -147,10 +156,15 @@ public class Presa {
       qt.query(cir, l);      
       for (Point pr : l){
           Depredador p = (Depredador)pr.obj;
-          
+          PVector f = PVector.sub(pos, p.pos);
+          f.normalize();
+          f.mult(maxvel);
+          f.sub(vel);
+          f.limit(30);
+          f.mult(3);
+          acc.add(f);           
           dir = PVector.sub(pos,p.pos);
-          dir.normalize();
-                   
+          dir.normalize();                   
       }         
     }
     void draw(Vida sk){
@@ -190,8 +204,13 @@ public class Presa {
     
     void move(){
       if( !limit.contains(new Point(this) )){
-        dir = new PVector((float)Math.random()*2 - 1,(float)Math.random()*2 - 1); 
-        dir.normalize();       
+        PVector f = new PVector(-pos.x, -pos.y);
+        f.normalize();
+        f.mult(maxvel);
+        f.sub(vel);
+        f.limit(maxacc);
+        f.mult(2);
+        acc.add(f);       
       }
       
       vel.add(acc);
