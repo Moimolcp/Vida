@@ -15,7 +15,7 @@ public class Presa {
     float energiaRepro;
     float maxvel;
     float maxacc;
-    
+    float metabolismo;    
     float sep;
     float Fsep;
     float Fali;
@@ -25,41 +25,65 @@ public class Presa {
     int dots;
     
     int esperanzaVida;
-    Vida sk;
-    
+    float maxEnergia;
     boolean muerto;
+    int generacion = 0;
     
     PVector pos;
-    PVector dir;
     PVector vel;
     PVector acc;
+    Presa pareja;
+    
+    public Presa(int tamInicial, int tamFinal, float vision, float energiaRepro, float maxvel, float maxacc, float metabolismo, float sep, float Fsep, float Fali, float Fcoh, PVector col, int dots, int esperanzaVida, float maxEnergia, PVector pos, PVector vel,int generacion) {
+        this.edad = 0;
+        this.generacion = generacion;
+        this.tamInicial = tamInicial;
+        this.tam = tamInicial;
+        this.tamFinal = tamFinal;
+        this.vision = vision;
+        this.energia = maxEnergia;
+        this.energiaRepro = energiaRepro;
+        this.maxvel = maxvel;
+        this.maxacc = maxacc;
+        this.metabolismo = metabolismo;
+        this.sep = sep;
+        this.Fsep = Fsep;
+        this.Fali = Fali;
+        this.Fcoh = Fcoh;
+        this.col = col;
+        this.dots = dots;
+        this.esperanzaVida = esperanzaVida;
+        this.maxEnergia = maxEnergia;
+        this.muerto = false;
+        this.pos = pos;
+        this.vel = vel;
+        this.vel.limit(maxvel);
+        this.acc = new PVector(0,0);
+        this.p = new Piel();
+        //p.setup(col,dots);
+        p.c = false;
+    }
     
     
-    
-    
-    public Presa(Vida sk) {
+    public Presa() {
         this.dots = (int) (Math.random()* 45 + 5);
         this.col = new PVector((float)Math.random(),(float)Math.random(),(float)Math.random());
         this.p = new Piel();
-        p.setup(sk,col,dots);
+        p.setup(col,dots);
         p.c = false;
-        this.sk = sk;
         this.edad = 0;
         this.tamInicial = 20;
         this.tam = 20;
         this.tamFinal = 30;
-        this.vision = (float)Math.random()*200+80;
-        this.energia = 1000;
-        this.energiaRepro = 300;
+        this.vision = (float)Math.random()*100+80;
+        this.energia = 1;
+        this.energiaRepro = 1000;
         
-        this.esperanzaVida = 50;
+        this.esperanzaVida = 5000;
         this.muerto = false;
         
-        this.pos = new PVector((float)Math.random()*sk.width*2*5 - sk.width*5
-                                ,(float)Math.random()*sk.height*2*5 - sk.height*5);          
-        
-        this.dir = new PVector((float)Math.random()*2 - 1,(float)Math.random()*2 - 1);
-        this.dir.normalize();
+        this.pos = new PVector((float)Math.random()*width*2*5 - width*5
+                                ,(float)Math.random()*height*2*5 - height*5);          
         
         acc = new PVector(0, 0);
         Fsep = 1.8;
@@ -67,9 +91,9 @@ public class Presa {
         Fcoh = 1.0;
         sep = 50;
         maxacc = 0.03;
-        this.maxvel = (float)Math.random()*5+1;
+        this.maxvel = (float)Math.random()*4+0.3;
         //this.maxvel = 3;
-        vel = new PVector(dir.x,dir.y);
+        vel = new PVector((float)Math.random()*2 - 1,(float)Math.random()*2 - 1);
         
     }
     void check(QuadTree qt){
@@ -85,12 +109,31 @@ public class Presa {
       int aliCount = 0;
       int cohCount = 0;
       
+      
+      float mindist = 100000;
+      boolean reproduccion = false;
       for (Point pr : l){
           Presa p = (Presa)pr.obj;
-          if (pr.obj != this){
-            
+          if (pr.obj != this){            
             float distancia = PVector.dist(pos,p.pos);
             
+            if(distancia < tam/2 + p.tam/2 && edad >= esperanzaVida*0.3 && p.edad >= p.esperanzaVida*0.3 && energia >= energiaRepro*1.5 && p.energia >= p.energiaRepro*1.5){              
+               Presa c = cruce(this,p);
+               pre.add(c);
+               skin.add(c);
+               p.energia = p.energia - p.energiaRepro;
+               energia = energia - energiaRepro;
+            }
+            
+            if(edad >= esperanzaVida*0.3 && energia >= energiaRepro*1.5){
+              if (distancia < mindist && energia >= energiaRepro*1.5 && p.energia >= p.energiaRepro*1.5 ){
+                pareja = p;
+                mindist = distancia;
+                reproduccion = true;
+              }             
+              
+            }
+                                    
             // Separacion            
             if(distancia < sep){
               PVector diff = PVector.sub(pos ,p.pos );   
@@ -108,101 +151,116 @@ public class Presa {
             
             Vcoh.add(p.pos);
             cohCount++;
-            
-            dir = new PVector((float)Math.random()*2 - 1,(float)Math.random()*2 - 1); 
-            dir.normalize();
+
             //break;
           }          
       }
       
-      if(sepCount > 0){
-        Vsep.div((float)sepCount);
-        Vsep.normalize();
-        Vsep.mult(maxvel);
-        Vsep.sub(vel);
-        Vsep.limit(maxacc);
+      if(!reproduccion){
+        if(sepCount > 0 ){
+          Vsep.div((float)sepCount);
+          Vsep.normalize();
+          Vsep.mult(maxvel);
+          Vsep.sub(vel);
+          Vsep.limit(maxacc);
+          Vsep.mult(Fsep);
+          acc.add(Vsep);
+        }
+        
+        if(aliCount > 0){
+          Vali.div((float)aliCount);        
+          Vali.normalize();
+          Vali.mult(maxvel);
+          Vali.sub(vel);
+          Vali.limit(maxacc);
+          Vali.mult(Fali);
+          acc.add(Vali);
+        }
+        
+        if(cohCount > 0){
+          Vcoh.div(cohCount);        
+          Vcoh.sub(pos); 
+          Vcoh.normalize();
+          Vcoh.mult(maxvel);       
+          Vcoh.sub(vel);
+          Vcoh.limit(maxacc);
+          Vcoh.mult(Fcoh);
+          acc.add(Vcoh);
+        }
+      }else{
+        PVector f = PVector.sub(pareja.pos, pos);
+        f.normalize();
+        f.mult(maxvel);
+        f.sub(vel);
+        f.limit(maxacc);
+        f.mult(2);
+        acc.add(f);  
       }
-      
-      if(aliCount > 0){
-        Vali.div((float)aliCount);        
-        Vali.normalize();
-        Vali.mult(maxvel);
-        Vali.sub(vel);
-        Vali.limit(maxacc);
-      }
-      
-      if(cohCount > 0){
-        Vcoh.div(cohCount);        
-        Vcoh.sub(pos); 
-        Vcoh.normalize();
-        Vcoh.mult(maxvel);       
-        Vcoh.sub(vel);
-        Vcoh.limit(maxacc);        
-      }
-      
-      Vsep.mult(Fsep);
-      Vali.mult(Fali);
-      Vcoh.mult(Fcoh);
-      
-      acc.add(Vsep);
-      acc.add(Vali);
-      acc.add(Vcoh);
-      
     }
     
     void checkP(QuadTree qt){
       ArrayList<Point> l = new ArrayList();
       Circle cir = new Circle(pos.x,pos.y, vision);      
-      qt.query(cir, l);      
+      qt.query(cir, l);
+      PVector f = new PVector(0,0);
+      float mindist = 1000000;
       for (Point pr : l){
-          Depredador p = (Depredador)pr.obj;
-          PVector f = PVector.sub(pos, p.pos);
-          f.normalize();
-          f.mult(maxvel);
-          f.sub(vel);
-          f.limit(30);
-          f.mult(3);
-          acc.add(f);           
-          dir = PVector.sub(pos,p.pos);
-          dir.normalize();                   
-      }         
+        Depredador p = (Depredador) pr.obj;
+        float di = PVector.dist(pos,p.pos);
+        if (di < mindist){
+          f = PVector.sub(pos, p.pos);
+        }
+      }
+      if(f.x != 0 && f.y != 0 ){
+        f.normalize();
+        f.mult(maxvel);
+        f.sub(vel);
+        f.limit(30);
+        f.mult(2);
+        acc.add(f);
+      }
+      
     }
-    void draw(Vida sk){
-        if( !(sk.camx >  pos.x || sk.camy > pos.y || sk.camy + sk.height/sk.zoom < pos.y || sk.camx + sk.width/sk.zoom < pos.x)){
+    
+    void draw(){
+        if( !(camx >  pos.x || camy > pos.y || camy + height/zoom < pos.y || camx + width/zoom < pos.x)){
           //p.update();
           //p.toImg(sk);
-          sk.pushMatrix();
-          sk.pushStyle();
+          pushMatrix();
+          pushStyle();
           
           float f = tam/2;
           
-          sk.translate(pos.x, pos.y);
+          translate(pos.x, pos.y);
           
-          sk.beginShape();          
+          beginShape();          
           
           if(p.ready){
-            sk.texture(p.img);
+            texture(p.img);
           }else{
-            //sk.fill(0,0,255);
+            fill(255*col.x,255*col.y,255*col.z);
           }
-          sk.strokeWeight(0); 
-          sk.vertex(-f, -f, 0, 0);
-          sk.vertex(f, -f, p.w, 0);
-          sk.vertex(f, f, p.w, p.h);
-          sk.vertex(-f, f, 0, p.h);
-          sk.vertex(-f, -f, 0, 0);
-          sk.endShape();
+          strokeWeight(0); 
+          vertex(-f, -f, 0, 0);
+          vertex(f, -f, p.w, 0);
+          vertex(f, f, p.w, p.h);
+          vertex(-f, f, 0, p.h);
+          vertex(-f, -f, 0, 0);
+          endShape();
           
           //sk.ellipseMode(RADIUS);
           //sk.ellipse(0,0,f,f);
           
           
-          sk.popStyle();
-          sk.popMatrix();
+          popStyle();
+          popMatrix();
         }
     }
     
     void move(){
+      edad++;
+      energia++;
+      if(edad >= esperanzaVida)muerto = true;
       if( !limit.contains(new Point(this) )){
         PVector f = new PVector(-pos.x, -pos.y);
         f.normalize();
@@ -217,8 +275,17 @@ public class Presa {
       // Limit speed
       vel.limit(maxvel);
       pos.add(vel);      
+      warp();
       acc.mult(0);
 
-    }
+   }
+   
+   void warp(){
+     if( pos.x < limit.x - limit.w) pos.x = limit.x + limit.w ;
+     if( pos.x > limit.x + limit.w) pos.x = limit.x - limit.w ;
+     if( pos.y < limit.y - limit.h) pos.y = limit.y + limit.h ;
+     if( pos.y > limit.y + limit.h) pos.y = limit.y - limit.h ;
+   }
+   
    
 }

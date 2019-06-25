@@ -32,7 +32,7 @@ public class Piel {
     int w = 100;
     int h = 100;    
     
-    void setup(Vida sk,PVector col,int dots) {
+    void setup(PVector col,int dots) {
         red = col.x;
         green = col.y;
         blue = col.z;
@@ -112,24 +112,6 @@ public class Piel {
             space = newSpace.clone();
         }
         ready = true;    
-    }
-
-    void draw(Vida sk) {
-        sk.point(100,200);
-        for (int i = 0; i < 200; i++) {
-            update();
-        }
-        sk.pushStyle();
-        for (int i = 1; i < w - 1; i++) {
-            for (int j = 1; j < h - 1; j++) {
-                float a = space[i][j][0];
-                float b = space[i][j][1];
-                int pos = i + j * w;
-                sk.stroke(color(0,0,(a - b) * 255));
-                //sk.point(i,j);
-            }
-        }
-        sk.popStyle();
     }
     
     PImage toImg(){

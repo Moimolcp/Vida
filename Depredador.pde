@@ -14,6 +14,7 @@ public class Depredador {
     float energia;
     float energiaRepro;
     int esperanzaVida;
+    float metabolismo;
     
     PVector pos;
     PVector dir;
@@ -35,7 +36,7 @@ public class Depredador {
         this.col = new PVector((float)Math.random(),(float)Math.random(),(float)Math.random());
         this.p = new Piel();
         this.p.c = true;
-        this.p.setup(sk,col,20);        
+        this.p.setup(col,20);        
         this.sk = sk;
         this.edad = 0;
         this.tamInicial = 80;
@@ -65,6 +66,7 @@ public class Depredador {
       Circle cir = new Circle(pos.x,pos.y, vision);      
       qt.query(cir, l);
       float mindist = 1000000;
+      objetivo = null;
       for (Point pr : l){
           Presa p = (Presa)pr.obj;
           float di = PVector.dist(pos,p.pos);
@@ -82,7 +84,7 @@ public class Depredador {
          f.mult(maxvel);
          f.sub(vel);
          f.limit(maxacc);
-         f.mult(3);
+         f.mult(2);
          acc.add(f);
       }
       
@@ -172,11 +174,16 @@ public class Depredador {
         acc.add(f);       
       }
       vel.add(acc);
-      // Limit speed
       vel.limit(maxvel);
-      pos.add(vel);      
+      pos.add(vel);
+      warp();
       acc.mult(0);
-      //pos.add(PVector.mult(dir,velocidad));
     }
+    void warp(){
+     if( pos.x < limit.x - limit.w) pos.x = limit.x + limit.w ;
+     if( pos.x > limit.x + limit.w) pos.x = limit.x - limit.w ;
+     if( pos.y < limit.y - limit.h) pos.y = limit.y + limit.h ;
+     if( pos.y > limit.y + limit.h) pos.y = limit.y - limit.h ;
+   }
     
 }
