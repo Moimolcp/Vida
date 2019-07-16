@@ -30,10 +30,16 @@ public class Depredador {
     
     Vida sk;
     
-    Presa objetivo;    
+    Presa objetivo;
+    Depredador pareja;
+    
+    float maxEnergia;
+    int generacion;
+    
+    boolean muerto = false;
     
     public Depredador(Vida sk) {  
-        this.col = new PVector((float)Math.random(),(float)Math.random(),(float)Math.random());
+        this.col = new PVector(1,0);
         this.p = new Piel();
         this.p.c = true;
         this.p.setup(col,20);        
@@ -41,14 +47,14 @@ public class Depredador {
         this.edad = 0;
         this.tamInicial = 80;
         this.tam = 80;
-        this.tamFinal = 30;
+        this.tamFinal = 80;
         this.vision = 400;
-        this.energia = 1000;
-        this.energiaRepro = 300;
+        this.energia = 3000;
+        this.energiaRepro = 1800;
         this.maxvel = 4;
         this.maxacc = 0.1;
-        this.esperanzaVida = 50;
-        
+        this.esperanzaVida = 10000;
+        this.metabolismo = 1;
         this.pos = new PVector((float)Math.random()*sk.width*2*5 - sk.width*5
                                 ,(float)Math.random()*sk.height*2*5 - sk.height*5);          
         
@@ -59,6 +65,34 @@ public class Depredador {
         vel = new PVector(dir.x,dir.y);
         sep = 100;
         Fsep = 1.0;
+        maxEnergia = 3000;
+        generacion = 1;
+    }
+    
+    public Depredador(int tamInicial, int tamFinal, float vision, float energiaRepro, float maxvel, float maxacc, float metabolismo, float sep, float Fsep, PVector col, int esperanzaVida, float maxEnergia, PVector pos, PVector vel,int generacion) {
+        this.edad = 0;
+        this.generacion = generacion;
+        this.tamInicial = tamInicial;
+        this.tam = tamInicial;
+        this.tamFinal = tamFinal;
+        this.vision = vision;
+        this.energia = maxEnergia;
+        this.energiaRepro = energiaRepro;
+        this.maxvel = maxvel;
+        this.maxacc = maxacc;
+        this.metabolismo = metabolismo;
+        this.sep = sep;
+        this.Fsep = Fsep;
+        this.col = col;
+        this.esperanzaVida = esperanzaVida;
+        this.maxEnergia = maxEnergia;
+        this.pos = pos;
+        this.vel = vel;
+        this.vel.limit(maxvel);
+        this.acc = new PVector(0,0);
+        this.p = new Piel();
+        this.p.c = true;
+        //p.setup(col,dots);
     }
     
     void checkP(QuadTree qt){
@@ -93,7 +127,8 @@ public class Depredador {
       qt.query(cir, l);      
       for (Point pr : l){
           Presa p = (Presa)pr.obj;
-          p.muerto = true;                   
+          p.muerto = true;          
+          energia = min(maxEnergia,energia+400);
       }
     }
     
@@ -104,11 +139,31 @@ public class Depredador {
       
       PVector Vsep = new PVector(0, 0);
       int sepCount = 0;
-      
+      float mindist = 10000;
+      boolean reproduccion = false;
+      boolean solo = true;
       for (Point pr : l){
+          solo = false;
           Depredador p = (Depredador)pr.obj;
           if (p != this){
             float distancia = PVector.dist(pos,p.pos);
+            
+            if(distancia < tam/2 + p.tam/2 && edad >= esperanzaVida*0.3 && p.edad >= p.esperanzaVida*0.3 && energia >= energiaRepro*1.5 && p.energia >= p.energiaRepro*1.5){              
+               Depredador c = cruceD(this,p);
+               dep.add(c);
+               skinD.add(c);
+               p.energia = p.energia - p.energiaRepro;
+               energia = energia - energiaRepro;
+            }
+            
+            if(edad >= esperanzaVida*0.3 && energia >= energiaRepro*1.5){
+              if (distancia < mindist && energia >= energiaRepro*1.5 && p.energia >= p.energiaRepro*1.5 ){
+                pareja = p;
+                mindist = distancia;
+                reproduccion = true;
+              }             
+              
+            }
             if(distancia < sep){
               PVector diff = PVector.sub(pos ,p.pos );   
               diff.normalize();
@@ -118,15 +173,27 @@ public class Depredador {
             }     
           } 
       }
-      
-      if(sepCount > 0){
-        Vsep.div((float)sepCount);
-        Vsep.normalize();
-        Vsep.mult(maxvel);
-        Vsep.sub(vel);
-        Vsep.limit(maxacc);
-        Vsep.mult(Fsep);
-        acc.add(Vsep);
+      if(solo){
+        this.vel.setMag(maxvel);
+      }
+      if(!reproduccion){
+        if(sepCount > 0){
+          Vsep.div((float)sepCount);
+          Vsep.normalize();
+          Vsep.mult(maxvel);
+          Vsep.sub(vel);
+          Vsep.limit(maxacc);
+          Vsep.mult(Fsep);
+          acc.add(Vsep);
+        }
+      }else{
+        PVector f = PVector.sub(pareja.pos, pos);
+        f.normalize();
+        f.mult(maxvel);
+        f.sub(vel);
+        f.limit(maxacc);
+        f.mult(2);
+        acc.add(f);         
       }
            
     }
@@ -164,6 +231,9 @@ public class Depredador {
     }
     
     void move(){
+      edad++;
+      energia = energia - metabolismo;
+      if(edad >= esperanzaVida || energia < 0 )muerto = true;
       if( !limit.contains(new Point(this) )){
         PVector f = new PVector(-pos.x, -pos.y);
         f.normalize();

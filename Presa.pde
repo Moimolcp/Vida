@@ -66,7 +66,7 @@ public class Presa {
     
     
     public Presa() {
-        this.dots = (int) (Math.random()* 45 + 5);
+        this.dots = (int) (Math.random()* 35.0 + 5.0);
         this.col = new PVector((float)Math.random(),(float)Math.random(),(float)Math.random());
         this.p = new Piel();
         p.setup(col,dots);
@@ -76,10 +76,11 @@ public class Presa {
         this.tam = 20;
         this.tamFinal = 30;
         this.vision = (float)Math.random()*100+80;
-        this.energia = 1;
-        this.energiaRepro = 1000;
+        this.energia = 2000;
+        this.energiaRepro = 1200;
+        this.maxEnergia = 2000;
         
-        this.esperanzaVida = 5000;
+        this.esperanzaVida = 3000;
         this.muerto = false;
         
         this.pos = new PVector((float)Math.random()*width*2*5 - width*5
@@ -91,6 +92,7 @@ public class Presa {
         Fcoh = 1.0;
         sep = 50;
         maxacc = 0.03;
+        metabolismo = 4;
         this.maxvel = (float)Math.random()*4+0.3;
         //this.maxvel = 3;
         vel = new PVector((float)Math.random()*2 - 1,(float)Math.random()*2 - 1);
@@ -112,7 +114,9 @@ public class Presa {
       
       float mindist = 100000;
       boolean reproduccion = false;
+      boolean solo = true;
       for (Point pr : l){
+          solo = false;
           Presa p = (Presa)pr.obj;
           if (pr.obj != this){            
             float distancia = PVector.dist(pos,p.pos);
@@ -155,8 +159,36 @@ public class Presa {
             //break;
           }          
       }
+      if(solo){
+        //this.vel.setMag(maxvel);
+      }
+      PVector Vcom = new PVector(0, 0);
+        
+      int[] idx = com(pos);
+      int fix = int(vision/80);
+      float maxcom = -1;
+      for(int i = idx[0]-fix;i <= idx[0]+fix;i++){
+        for(int j = idx[1]-fix;j <= idx[1]+fix;j++){            
+          if(i > 0 && j > 0 && j < nComida && i < nComida){
+            if(maxcom < comida[i][j]){
+              maxcom = comida[i][j];
+              Vcom = new PVector(idx[0]-i, idx[1]-j);               
+            }
+          }            
+        }
+      }
+              
+       
+      Vcom.normalize();
+      Vcom.mult(maxvel);       
+      Vcom.sub(vel);
+      Vcom.limit(maxacc);
+      Vcom.mult(1);
+      acc.add(Vcom);
+        
       
       if(!reproduccion){
+        
         if(sepCount > 0 ){
           Vsep.div((float)sepCount);
           Vsep.normalize();
@@ -229,7 +261,7 @@ public class Presa {
           pushMatrix();
           pushStyle();
           
-          float f = tam/2;
+          float f = map(edad,0,esperanzaVida,tamInicial,tamFinal)/2;
           
           translate(pos.x, pos.y);
           
@@ -258,9 +290,15 @@ public class Presa {
     }
     
     void move(){
-      edad++;
-      energia++;
-      if(edad >= esperanzaVida)muerto = true;
+      edad++;      
+      int idx[] = com(pos);
+      float aux = min(comida[idx[0]][idx[1]] , 2*metabolismo);            
+      if(energia + aux < maxEnergia){
+        comida[idx[0]][idx[1]] -= aux;
+        energia = energia + aux;
+      }
+      energia = energia - metabolismo;
+      if(edad >= esperanzaVida || energia < 0)muerto = true;
       if( !limit.contains(new Point(this) )){
         PVector f = new PVector(-pos.x, -pos.y);
         f.normalize();
@@ -277,6 +315,7 @@ public class Presa {
       pos.add(vel);      
       warp();
       acc.mult(0);
+      
 
    }
    

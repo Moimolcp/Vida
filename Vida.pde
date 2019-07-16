@@ -1,15 +1,16 @@
 
 import java.util.*;
 Random rand = new Random();
-//Planta p = new Planta(225,this);
 Piel piel = new Piel();
 ArrayList<Presa> pre = new ArrayList();
 ArrayList<Depredador> dep = new ArrayList();
 ArrayList<Presa> skin = new ArrayList();
+ArrayList<Depredador> skinD = new ArrayList();
 Presa objetivoP;
 Depredador objetivoD;
 
-boolean loaded = false;
+boolean loaded = true;
+boolean render_comida = false;
 
 int pop = 500;
 int popD = 25;
@@ -17,7 +18,7 @@ Rectangle limit = new Rectangle(0,0,5000,5000);
 QuadTree quatP = new QuadTree(limit,20);
 QuadTree quatD = new QuadTree(limit,20);
 
-int nComida = 10000/10;
+int nComida = 10000/80;
 float[][] comida = new float[nComida][nComida];
 
 //Zoom
@@ -35,19 +36,49 @@ boolean est = false;
 boolean stop = false;
 int maxgen =0;
 
+PShape foodmap;
+PShader fShader;
+PImage tfood;
+PImage season;
+
+int tseason = 0;
+int seasonid = 1;
+
+PGraphics c_planta;
+Planta planta;
+ArrayList<PVector> plantas = new ArrayList<PVector>();
 void setup() {
+    tfood = new PImage(nComida,nComida);
     size(800, 800,P2D);
     background(255);        
     frameRate(60);    
     thread("load");
     thread("loadP");
     thread("updateSkin");
+    createFoodmap();
+    fShader = loadShader("foodfrag.glsl", "foodvert.glsl");
+    season = loadImage("s1.tif");
+    planta = new Planta();  
+    c_planta = createGraphics(400,400);
+    c_planta.beginDraw();
+    c_planta.endDraw();  
+    for (int i = 0; i < 50; i++) {
+      plantas.add(new PVector((float)Math.random()*width*2*5 - width*5
+                                ,(float)Math.random()*height*2*5 - height*5));  
+    }  
     
 }
 
 void draw() {
   background(255);
-  fill(0);  
+  fill(0);
+  
+  if(tseason == 1000){
+    season = loadImage("s"+seasonid+".tif");
+    seasonid = seasonid%4 + 1;
+    tseason = 0;
+  }
+  tseason++;
   
   if(seguirP){
     estP = true;
@@ -61,7 +92,7 @@ void draw() {
     zoomy = -objetivoD.pos.y*zoom +width/2;
   }
     
-  println("framerate: " + int(frameRate) + " Poblacion: " + pre.size() + " maxgen " + maxgen);
+  println("framerate: " + int(frameRate) + " Poblacion: " + dep.size() +" , "+ pre.size() + " maxgen " + maxgen);
   //println(zoomx + " " + zoomy );
   //println((mouseX-zoomx)/zoom + " " + (mouseY-zoomy)/zoom + " "+ seguir);
   //if (objetivo != null)println(objetivo.x + " " + objetivo.y + " "+ seguir + " , "+  (mouseX-zoomx)/zoom + " " + (mouseY-zoomy)/zoom + " "+ seguir); 
@@ -85,32 +116,22 @@ void draw() {
   
   
   if(loaded){
-    runAgents();
+    runAgents();  
   }
   
+  c_planta.beginDraw();  
+  planta.draw(3,5,"X");
+  c_planta.endDraw();
+  for (int i = 0; i < 50; i++) {
+    PVector posplanta = plantas.get(i);
+    image(c_planta,posplanta.x,posplanta.y);    
+  } 
   printDebug();
   //println(skin.size());
   
 }
 
-void runComida(){
-  translate(-5000,-5000);
-  strokeWeight(0);
-  for(int i = 0;i < nComida;i++){
-    for(int j = 0;j < nComida;j++){
-      comida[i][j] = comida[i][j] + 1;
-      comida[i][j] = comida[i][j] + 1;
-      comida[i][j] = comida[i][j] + 1;
-      comida[i][j] = comida[i][j] + 1;
-      comida[i][j] = comida[i][j] + 1;
-      comida[i][j] = comida[i][j] + 1;
-      comida[i][j] = comida[i][j] + 1;
-      comida[i][j] = comida[i][j] + 1;
-      comida[i][j] = comida[i][j] + 1;
-    }    
-  }
-  translate(5000,5000);
-}
+
 
 void printDebug(){
   if(estP){
@@ -142,6 +163,8 @@ void printDebug(){
     text("Separacion :" + objetivoP.sep,20,120);
     text("Energia :" + objetivoP.energia,20,130);
     text("Separacion :" + objetivoP.sep,20,140);
+    text("Metabolismo :" + objetivoP.metabolismo,20,150);
+    text("Energia Maxima :" + objetivoP.maxEnergia,20,160);
     
   }if(estD){
     strokeWeight(2);
@@ -149,9 +172,29 @@ void printDebug(){
     fill(0,0,0,0);
     circle(objetivoD.pos.x,objetivoD.pos.y,objetivoD.vision*2);
     strokeWeight(0);
+    
+    resetMatrix();
+    fill(255);
+    rect(0,0,200,200);
+    fill(0);
+    text("Vel :" + objetivoD.vel.mag(),20,50);
+    text("Max Vel :" + objetivoD.maxvel,20,60);
+    text("Acc :" + objetivoD.maxacc,20,70);
+    text("Tamaño :" + objetivoD.tam,20,80);
+    text("Edad :" + objetivoD.edad,20,90);
+    text("Generacion :" + objetivoD.generacion,20,100);
+    text("Vision :" + objetivoD.vision,20,110);
+    text("Separacion :" + objetivoD.sep,20,120);
+    text("Energia :" + objetivoD.energia,20,130);
+    text("Separacion :" + objetivoD.sep,20,140);
+    text("Metabolismo :" + objetivoD.metabolismo,20,150);
+    text("Energia Maxima :" + objetivoD.maxEnergia,20,160);
+    
   }
   
-  
+  resetMatrix();
+  fill(0);
+  text("Framerate: "  + frameRate,width - 150,10);
 }
 
 void runAgents(){
@@ -180,11 +223,15 @@ void runAgents(){
   
   for (int i = dep.size() - 1; i >= 0; i--) {
       Depredador de = dep.get(i);   
-      de.draw(this);
-      if(!stop){
-        de.check(quatD);
-        de.checkP(quatP);
-        de.move();
+      if (de.muerto) {
+        dep.remove(i);
+      }else{
+        de.draw(this);
+        if(!stop){
+          de.check(quatD);
+          de.checkP(quatP);
+          de.move();
+        }
       }
   }    
   
@@ -244,5 +291,51 @@ void updateSkin(){
     pr.p.setup(pr.col,pr.dots);
     skin.remove(i);
   }
+  for (int i = skinD.size() - 1; i >= 0; i--) {
+    Depredador pr = skinD.get(i);
+    pr.p.setup(pr.col,20);
+    skinD.remove(i);
+  }
   thread("updateSkin");
+}
+
+void createFoodmap(){
+  foodmap = createShape();
+  foodmap.setFill(color(255, 255, 255));
+  foodmap.setStrokeWeight(0);
+  
+  foodmap.beginShape(QUAD_STRIP);
+  for(int i = 0;i <= nComida;i = i + 1 ){
+    for(int j = 0;j <= nComida;j = j + 1){
+      foodmap.vertex( j*80, i*80 , j, i);
+      foodmap.vertex( j*80, (i+1)*80 ,j, i+1);      
+    }
+  }
+  tfood.updatePixels();
+  foodmap.endShape();  
+}
+
+void runComida(){
+  translate(-5000,-5000);
+  shader(fShader);
+  fShader.set("ftexture",tfood);
+  shape(foodmap);
+  resetShader();
+  strokeWeight(0);
+
+  for(int i = 0;i < nComida;i++){
+    for(int j = 0;j < nComida;j++){
+      float c = map(comida[i][j], 0,400,0,255);
+      float b = map(c, 0,255,255,0);
+      float mx = blue(season.pixels[i + j * nComida]);
+      mx = map(mx,0,255,200,400);
+      tfood.pixels[i + j * nComida] = color( b, max(b,c) , b);
+      if(render_comida)tfood.pixels[i + j * nComida] = color(200,200,200);
+      if(!stop)comida[i][j] = min(comida[i][j] + 3,mx);
+    }
+  }
+  
+  
+  tfood.updatePixels();
+  translate(5000,5000);
 }

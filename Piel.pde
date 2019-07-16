@@ -70,10 +70,16 @@ public class Piel {
     }
 
     void update() {
-        for (int s= 0; s < 200; s++) {
+        if(this.c){
+          f = 0.022f;
+          k = 0.053f;        
+        }else{
+          //f = 0.039f;
+          //k = 0.058f;
+        }
+        for (int s= 0; s < 300; s++) {
             for (int i = 1; i < w - 1; i++) {
                 for (int j = 1; j < h - 1; j++) {
-
                     float a = space[i][j][0];
                     float b = space[i][j][1];
 
@@ -102,10 +108,10 @@ public class Piel {
                     float newA = a + (dA * laplaceA - a * b * b + f * (1 - a)) * 1;
                     float newB = b + (dB * laplaceB + a * b * b - (k + f) * b) * 1;
 
-                    //newSpace[i][j][0] = constrain(newSpace[i][j][0], 0, 1);
-                    //newSpace[i][j][1] = constrain([1], 0, 1);
-                    newSpace[i][j][0] = newA > 1?1:newA;
-                    newSpace[i][j][1] = newB > 1?1:newB;
+                    newSpace[i][j][0] = constrain(newA, 0, 1);
+                    newSpace[i][j][1] = constrain(newB, 0, 1);
+                    //newSpace[i][j][0] = newA > 1?1:newA;
+                    //newSpace[i][j][1] = newB > 1?1:newB;
 
                 }
             }
@@ -121,7 +127,9 @@ public class Piel {
                 float a = space[i][j][0];
                 float b = space[i][j][1];
                 if(this.c){
-                  img.pixels[i + j * w] = color((a - b) * 255,0,0);
+                  float s = (a - b) * 255;
+                  s = map(s,0,255,255,0);
+                  img.pixels[i + j * w] = color(s,0,0);
                 }else{
                   img.pixels[i + j * w] = color(((a - b) * 255)*red,((a - b) * 255)*green,((a - b) * 255)*blue);
                 }

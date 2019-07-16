@@ -38,7 +38,10 @@ void keyPressed(){
     seguirD = false;
     //zoomy = 400f;
     //zoomx = 400f;
-  }  
+  }
+  if (key == 'c'){
+    render_comida = !render_comida;
+  }
   if (key == 'a'){
     est = !est;
     estP = false;
