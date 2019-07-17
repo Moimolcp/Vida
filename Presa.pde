@@ -8,7 +8,7 @@ public class Presa {
     Piel p;
     int edad;
     int tamInicial;
-    int tam;
+    float tam;
     int tamFinal;
     float vision;
     float energia;
@@ -66,7 +66,7 @@ public class Presa {
     
     
     public Presa() {
-        this.dots = (int) (Math.random()* 35.0 + 5.0);
+        this.dots = (int) (Math.random()* 18 + 5.0);
         this.col = new PVector((float)Math.random(),(float)Math.random(),(float)Math.random());
         this.p = new Piel();
         p.setup(col,dots);
@@ -130,7 +130,7 @@ public class Presa {
             }
             
             if(edad >= esperanzaVida*0.3 && energia >= energiaRepro*1.5){
-              if (distancia < mindist && energia >= energiaRepro*1.5 && p.energia >= p.energiaRepro*1.5 ){
+              if (distancia < mindist && p.edad >= p.esperanzaVida*0.3 && p.energia >= p.energiaRepro*1.5 ){
                 pareja = p;
                 mindist = distancia;
                 reproduccion = true;
@@ -184,7 +184,7 @@ public class Presa {
       Vcom.sub(vel);
       Vcom.limit(maxacc);
       Vcom.mult(1);
-      acc.add(Vcom);
+      //acc.add(Vcom);
         
       
       if(!reproduccion){
@@ -260,8 +260,8 @@ public class Presa {
           //p.toImg(sk);
           pushMatrix();
           pushStyle();
-          
-          float f = map(edad,0,esperanzaVida,tamInicial,tamFinal)/2;
+          tam = map(edad,0,esperanzaVida,tamInicial,tamFinal)/2;
+          float f = tam;
           
           translate(pos.x, pos.y);
           

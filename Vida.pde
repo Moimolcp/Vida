@@ -9,11 +9,13 @@ ArrayList<Depredador> skinD = new ArrayList();
 Presa objetivoP;
 Depredador objetivoD;
 
-boolean loaded = true;
+boolean loaded = false;
 boolean render_comida = false;
 
 int pop = 500;
 int popD = 25;
+
+
 Rectangle limit = new Rectangle(0,0,5000,5000);
 QuadTree quatP = new QuadTree(limit,20);
 QuadTree quatD = new QuadTree(limit,20);
@@ -92,7 +94,7 @@ void draw() {
     zoomy = -objetivoD.pos.y*zoom +width/2;
   }
     
-  println("framerate: " + int(frameRate) + " Poblacion: " + dep.size() +" , "+ pre.size() + " maxgen " + maxgen);
+  println("framerate: " + int(frameRate) + " Poblacion: " + dep.size() +" , "+ pre.size() + " maxgen " + maxgen + " , " + skin.size());
   //println(zoomx + " " + zoomy );
   //println((mouseX-zoomx)/zoom + " " + (mouseY-zoomy)/zoom + " "+ seguir);
   //if (objetivo != null)println(objetivo.x + " " + objetivo.y + " "+ seguir + " , "+  (mouseX-zoomx)/zoom + " " + (mouseY-zoomy)/zoom + " "+ seguir); 
@@ -123,7 +125,7 @@ void draw() {
   planta.draw(3,5,"X");
   c_planta.endDraw();
   for (int i = 0; i < 50; i++) {
-    PVector posplanta = plantas.get(i);
+    PVector posplanta = plantas.get(i);    
     image(c_planta,posplanta.x,posplanta.y);    
   } 
   printDebug();
@@ -150,21 +152,29 @@ void printDebug(){
     
     resetMatrix();
     fill(255);
-    rect(0,0,200,200);
+    rect(0,0,240,210);
     fill(0);
-    text("Vel :" + objetivoP.vel.mag(),20,40);
-    text("Max Vel :" + objetivoP.maxvel,20,50);
-    text("Acc :" + objetivoP.maxacc,20,60);
-    text("Dots :" + objetivoP.dots,20,70);
+    text("Velocidad :" + objetivoP.vel.mag(),20,40);
+    text("Maxima Velocidad :" + objetivoP.maxvel,20,50);
+    text("Aceleracion :" + objetivoP.maxacc,20,60);
+    text("Puntos :" + objetivoP.dots,20,70);
     text("Tamaño :" + objetivoP.tam,20,80);
     text("Edad :" + objetivoP.edad,20,90);
-    text("Generacion :" + objetivoP.generacion,20,100);
+    text("Esperanza de Vida :" + objetivoP.esperanzaVida,20,100);
     text("Vision :" + objetivoP.vision,20,110);
     text("Separacion :" + objetivoP.sep,20,120);
     text("Energia :" + objetivoP.energia,20,130);
-    text("Separacion :" + objetivoP.sep,20,140);
-    text("Metabolismo :" + objetivoP.metabolismo,20,150);
-    text("Energia Maxima :" + objetivoP.maxEnergia,20,160);
+    text("Energia Maxima :" + objetivoP.maxEnergia,20,140);
+    text("Energia de Reproduccion :" + objetivoP.energiaRepro,20,150);
+    fill(255* objetivoP.col.x,255* objetivoP.col.y,255* objetivoP.col.z);
+    text("Color : XXXXXXXXXXX",20,160);
+    fill(0);
+    text("Metabolismo :" + objetivoP.metabolismo,20,170);
+    text("Generacion :" + objetivoP.generacion,20,180);
+    text("Tamaño inicial :" + objetivoP.tamInicial,20,190);
+    text("Tamaño final :" + objetivoP.tamFinal,20,200);
+    
+    
     
   }if(estD){
     strokeWeight(2);
@@ -267,7 +277,7 @@ void runAgents(){
 
 void loadP(){
   for (int i = 0; i < popD; i++) {
-      Depredador pn = new Depredador(this);
+      Depredador pn = new Depredador();
       dep.add(pn);
       //println(i);
   }
@@ -288,12 +298,12 @@ void load(){
 void updateSkin(){
   for (int i = skin.size() - 1; i >= 0; i--) {
     Presa pr = skin.get(i);
-    pr.p.setup(pr.col,pr.dots);
+    if(!pr.p.ready && !pr.muerto)pr.p.setup(pr.col,pr.dots);
     skin.remove(i);
   }
   for (int i = skinD.size() - 1; i >= 0; i--) {
     Depredador pr = skinD.get(i);
-    pr.p.setup(pr.col,20);
+    if(!pr.p.ready)pr.p.setup(pr.col,20);
     skinD.remove(i);
   }
   thread("updateSkin");
@@ -325,6 +335,7 @@ void runComida(){
 
   for(int i = 0;i < nComida;i++){
     for(int j = 0;j < nComida;j++){
+      //float c = map(i,0,nComida/8,0,255);
       float c = map(comida[i][j], 0,400,0,255);
       float b = map(c, 0,255,255,0);
       float mx = blue(season.pixels[i + j * nComida]);
@@ -335,7 +346,7 @@ void runComida(){
     }
   }
   
-  
   tfood.updatePixels();
   translate(5000,5000);
+  
 }

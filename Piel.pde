@@ -77,7 +77,7 @@ public class Piel {
           //f = 0.039f;
           //k = 0.058f;
         }
-        for (int s= 0; s < 300; s++) {
+        for (int s= 0; s < 200; s++) {
             for (int i = 1; i < w - 1; i++) {
                 for (int j = 1; j < h - 1; j++) {
                     float a = space[i][j][0];

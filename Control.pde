@@ -23,8 +23,10 @@ void mouseDragged(){
   }
 }
 void keyPressed(){
-  if (key == ' '){
+  if (key == 'z'){
     Presa pn = new Presa();
+    pn.pos.x = (mouseX-zoomx)/zoom;
+    pn.pos.y = (mouseY-zoomy)/zoom;
     pre.add(pn);
     //print(key);
   }
@@ -47,6 +49,31 @@ void keyPressed(){
     estP = false;
     estD = false;
   }
+  if (key == 'q'){    
+    if( objetivoP != null){
+      objetivoP.edad = 2000;
+      objetivoP.energia = 2000;
+    }
+    if( objetivoP != null){
+      objetivoP.edad = 2000;
+      objetivoP.energia = 4000;
+    }
+  }
+  if (key == 'w'){
+    if( objetivoP != null){
+      objetivoP.muerto = true;
+    }
+    if( objetivoD != null){
+      objetivoD.muerto = true;
+    }
+  }  
+  if (key == 'x'){
+    Depredador pn = new Depredador();
+    pn.pos.x = (mouseX-zoomx)/zoom;
+    pn.pos.y = (mouseY-zoomy)/zoom;
+    dep.add(pn);
+  } 
+  
 }
 
 void mouseWheel(MouseEvent e)

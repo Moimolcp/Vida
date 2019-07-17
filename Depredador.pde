@@ -28,8 +28,6 @@ public class Depredador {
     
     PVector col;
     
-    Vida sk;
-    
     Presa objetivo;
     Depredador pareja;
     
@@ -37,35 +35,35 @@ public class Depredador {
     int generacion;
     
     boolean muerto = false;
+    boolean solo = true;
     
-    public Depredador(Vida sk) {  
+    public Depredador() {  
         this.col = new PVector(1,0);
         this.p = new Piel();
         this.p.c = true;
         this.p.setup(col,20);        
-        this.sk = sk;
         this.edad = 0;
         this.tamInicial = 80;
         this.tam = 80;
         this.tamFinal = 80;
         this.vision = 400;
-        this.energia = 3000;
+        this.energia = 6000;
         this.energiaRepro = 1800;
         this.maxvel = 4;
         this.maxacc = 0.1;
         this.esperanzaVida = 10000;
         this.metabolismo = 1;
-        this.pos = new PVector((float)Math.random()*sk.width*2*5 - sk.width*5
-                                ,(float)Math.random()*sk.height*2*5 - sk.height*5);          
+        this.pos = new PVector((float)Math.random()*width*2*5 - width*5
+                                ,(float)Math.random()*height*2*5 - height*5);          
         
         this.dir = new PVector((float)Math.random()*2 - 1,(float)Math.random()*2 - 1);
         this.dir.normalize();
         
         acc = new PVector(0, 0);
         vel = new PVector(dir.x,dir.y);
-        sep = 100;
-        Fsep = 1.0;
-        maxEnergia = 3000;
+        sep = 200;
+        Fsep = 5.0;
+        maxEnergia = energia;
         generacion = 1;
     }
     
@@ -103,7 +101,8 @@ public class Depredador {
       objetivo = null;
       for (Point pr : l){
           Presa p = (Presa)pr.obj;
-          float di = PVector.dist(pos,p.pos);
+          //float di = PVector.dist(pos,p.pos);
+          float di = p.vel.mag();
           if (di < mindist){
             mindist = di;
             objetivo = p;
@@ -141,11 +140,12 @@ public class Depredador {
       int sepCount = 0;
       float mindist = 10000;
       boolean reproduccion = false;
-      boolean solo = true;
+      solo = true;
       for (Point pr : l){
-          solo = false;
+                    
           Depredador p = (Depredador)pr.obj;
           if (p != this){
+            solo = false;
             float distancia = PVector.dist(pos,p.pos);
             
             if(distancia < tam/2 + p.tam/2 && edad >= esperanzaVida*0.3 && p.edad >= p.esperanzaVida*0.3 && energia >= energiaRepro*1.5 && p.energia >= p.energiaRepro*1.5){              
@@ -157,7 +157,7 @@ public class Depredador {
             }
             
             if(edad >= esperanzaVida*0.3 && energia >= energiaRepro*1.5){
-              if (distancia < mindist && energia >= energiaRepro*1.5 && p.energia >= p.energiaRepro*1.5 ){
+              if (distancia < mindist && p.energia >= p.energiaRepro*1.5 && p.energia >= p.energiaRepro*1.5 ){
                 pareja = p;
                 mindist = distancia;
                 reproduccion = true;
@@ -173,9 +173,7 @@ public class Depredador {
             }     
           } 
       }
-      if(solo){
-        this.vel.setMag(maxvel);
-      }
+      
       if(!reproduccion){
         if(sepCount > 0){
           Vsep.div((float)sepCount);
@@ -248,6 +246,10 @@ public class Depredador {
       pos.add(vel);
       warp();
       acc.mult(0);
+      if(solo){
+        vel.mult(80);
+        vel.limit(maxvel);
+      }
     }
     void warp(){
      if( pos.x < limit.x - limit.w) pos.x = limit.x + limit.w ;
