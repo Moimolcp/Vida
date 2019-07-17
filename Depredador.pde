@@ -101,8 +101,8 @@ public class Depredador {
       objetivo = null;
       for (Point pr : l){
           Presa p = (Presa)pr.obj;
-          //float di = PVector.dist(pos,p.pos);
-          float di = p.vel.mag();
+          float di = PVector.dist(pos,p.pos);
+          //float di = p.vel.mag();
           if (di < mindist){
             mindist = di;
             objetivo = p;

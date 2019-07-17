@@ -319,8 +319,8 @@ void mutacion(Presa a){
     a.tamFinal = constrain(a.tamFinal, 10, 80);
   }
   if ( i == 1) {
-    a.maxvel = a.maxvel + (float)rand.nextGaussian();
-    a.maxvel = constrain(a.maxvel, 1.0, 10.0);
+    a.maxvel = a.maxvel + (float)rand.nextGaussian()*0.5;
+    a.maxvel = constrain(a.maxvel, 0.5, 10.0);
   }
   if ( i == 2) {
     a.maxacc = a.maxacc + (float)(rand.nextGaussian()*0.05);
@@ -332,7 +332,7 @@ void mutacion(Presa a){
   }
   if ( i == 4) {
     a.metabolismo = a.metabolismo + (float)(rand.nextGaussian()*0.1);
-    a.metabolismo = constrain(a.metabolismo, 5.0, 3000.0);
+    a.metabolismo = constrain(a.metabolismo, 4.0, 30.0);
   }
   if ( i == 5) {
     a.esperanzaVida = a.esperanzaVida + (int) (Math.random()*100 - 50);

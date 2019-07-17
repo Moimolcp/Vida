@@ -72,9 +72,9 @@ public class Presa {
         p.setup(col,dots);
         p.c = false;
         this.edad = 0;
-        this.tamInicial = 20;
-        this.tam = 20;
-        this.tamFinal = 30;
+        this.tamInicial = (int) (Math.random()* 5 + 20);
+        this.tam = 0;
+        this.tamFinal =  tamInicial + (int) (Math.random()* 10);
         this.vision = (float)Math.random()*100+80;
         this.energia = 2000;
         this.energiaRepro = 1200;

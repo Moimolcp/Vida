@@ -100,16 +100,15 @@ void draw() {
   //if (objetivo != null)println(objetivo.x + " " + objetivo.y + " "+ seguir + " , "+  (mouseX-zoomx)/zoom + " " + (mouseY-zoomy)/zoom + " "+ seguir); 
   //println((mouseX-zoomx)/zoom + " " + (mouseY-zoomy)/zoom);
   translate(zoomx, zoomy);
-  scale(zoom);
-    
+  scale(zoom);      
   
   camx = -zoomx*(1/zoom);
   camy = -zoomy*(1/zoom);  
   //rect(camx,camy,width*(1/zoom),height*(1/zoom));
   //rect(-400,-400,width,height);
   
-  fill(230);
-  rect(-5000,-5000,10000,10000);
+  //fill(230);
+  //rect(-5000,-5000,10000,10000);
   
   runComida();
   fill(255,255,0);
